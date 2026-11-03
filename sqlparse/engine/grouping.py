@@ -318,7 +318,17 @@ def group_identifier_list(tlist):
     ttypes = (T_NUMERICAL + T_STRING + T_NAME
               + (T.Keyword, T.Comment, T.Wildcard))
 
+    first = tlist.token_first(skip_cm=True)
+    if first and first.match(T.Keyword, 'RENAME'):
+        first_idx = tlist.token_index(first)
+        _, second = tlist.token_next(first_idx, skip_cm=True)
+        is_rename_table = second and second.match(T.Keyword, 'TABLE')
+    else:
+        is_rename_table = False
+
     def match(token):
+        if is_rename_table and token.parent is tlist:
+            return False
         return token.match(T.Punctuation, ',')
 
     def valid(token):
