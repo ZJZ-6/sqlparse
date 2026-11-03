@@ -207,6 +207,26 @@ def test_grouping_identifier_list():
     assert isinstance(p.tokens[0].tokens[1], sql.IdentifierList)
 
 
+def test_grouping_rename_table_identifiers_issue779():
+    p = sqlparse.parse(
+        'rename table `db`.`test1` to test2, `db`.`test3` to test4'
+    )[0]
+    identifiers = [token.value for token in p.tokens
+                   if isinstance(token, sql.Identifier)]
+    assert identifiers == [
+        '`db`.`test1`', 'test2', '`db`.`test3`', 'test4'
+    ]
+    assert not any(isinstance(token, sql.IdentifierList)
+                   for token in p.tokens)
+
+
+def test_grouping_rename_table_single_pair():
+    p = sqlparse.parse('rename table `db`.`test1` to test2')[0]
+    identifiers = [token.value for token in p.tokens
+                   if isinstance(token, sql.Identifier)]
+    assert identifiers == ['`db`.`test1`', 'test2']
+
+
 def test_grouping_identifier_list_subquery():
     """identifier lists should still work in subqueries with aliases"""
     p = sqlparse.parse("select * from ("
